@@ -96,12 +96,15 @@ def construct_latex(components, groups):
 
 def predict(components, persistent_sess, x, y, CNN_output_map):
     results = []
+    test = np.asarray([components[i]['pic'] for i in sorted(components.keys())]).astype(np.float32)
+    print(test.shape)
     for i in range(len(components)):
         test = np.asarray(components[i+1]['pic']).astype(np.float32)
         test = array(test).reshape(1,45,45,1)
         y_out = persistent_sess.run(y, feed_dict={
             x: test
         })
+        
         components[i+1]['label'] = y_out[0]
         components[i+1]['output'] = CNN_output_map[y_out[0]]
 

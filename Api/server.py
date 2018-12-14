@@ -66,7 +66,7 @@ def remove_file(filename):
 if __name__ == '__main__':
     # Let's allow the user to pass the filename as an argument
     parser = argparse.ArgumentParser()
-    parser.add_argument("--frozen_model_filename", default="frozen_graph_v1.pb", type=str, help="Frozen model file to import")
+    parser.add_argument("--frozen_model_filename", default="frozen_graph_v2.pb", type=str, help="Frozen model file to import")
     parser.add_argument("--gpu_memory", default=.2, type=float, help="GPU memory per process")
     args = parser.parse_args()
 
@@ -79,7 +79,6 @@ if __name__ == '__main__':
 
     # init output map
     CNN_output_map = make_output_map()
-    print(CNN_output_map[37],CNN_output_map[38],CNN_output_map[31],CNN_output_map[65],CNN_output_map[2],CNN_output_map[1],CNN_output_map[26],CNN_output_map[8],CNN_output_map[16],CNN_output_map[75],CNN_output_map[56],CNN_output_map[6])
         
     print('Starting Session, setting the GPU memory usage to %f' % args.gpu_memory)
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_memory)
