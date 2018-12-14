@@ -51,7 +51,7 @@ def index():
 def analyze(filename):
     # process img
     components = process_img('./static/uploads/' + filename)
-    return predict(components, persistent_sess, x, y, CNN_output_map)
+    return predict(components, persistent_sess, x, y, CNN_output_map, filename)
 
 
 @app.route('/uploads/<filename>')

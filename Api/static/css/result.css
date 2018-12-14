@@ -8,4 +8,22 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex-grow: 1;
+}
+
+.settings {
+    margin-top: 70px;
+    width: 20%;
+}
+
+.content-contain {
+    display: flex;
+}
+
+.settings input {
+    max-width: 75px;
+}
+
+#resultImg, #componentImg {
+    max-width: 100%;
 }

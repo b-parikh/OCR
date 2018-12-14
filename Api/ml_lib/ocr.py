@@ -12,6 +12,11 @@ def process_img(img_filename):
     X_processed = tune_img(X, img_filename)
     _, labels = cv2.connectedComponents(X_processed)
 
+    plt.imshow(labels)
+    plt.axis('off')
+
+    plt.savefig('./static/result/connectedComponents.png')
+
     components = get_components(labels)
     return components
 
