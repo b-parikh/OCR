@@ -119,7 +119,7 @@ def predict(components, persistent_sess, x, y, CNN_output_map, filename):
     plt.savefig(dest)
 
     img = b64encode(open(dest, 'rb').read())
-    img_2 = b64encode(open('./static/result/connectedComponents.png', 'rb').read())
+    img_2 = b64encode(open('./static/preview/connectedComponents.png', 'rb').read())
     
     expr = process_output(components, CNN_output_map)
     return json.dumps({'results': results, 'expr': expr, 'result': img.decode("utf-8"), 'components': img_2.decode("utf-8")})
