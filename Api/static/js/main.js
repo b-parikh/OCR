@@ -36,7 +36,6 @@ const alertContents = () => {
     if (httpRequest.readyState === XMLHttpRequest.DONE) {
         if (httpRequest.status === 200) {
             let response = JSON.parse(httpRequest.responseText);
-            console.log(response, typeof(response));
             updatePage(response);
         } else {
             alert('There was a problem with the request.');

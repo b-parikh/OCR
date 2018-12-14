@@ -15,7 +15,7 @@ def process_img(img_filename):
     plt.imshow(labels)
     plt.axis('off')
 
-    plt.savefig('./static/result/connectedComponents.png')
+    plt.savefig('./static/preview/connectedComponents.png')
 
     components = get_components(labels)
     return components
