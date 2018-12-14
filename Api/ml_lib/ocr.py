@@ -9,14 +9,11 @@ def process_img(img_filename):
     new_shape[2] = 3
     X = X.reshape(new_shape)
 
-    X_processed = tune_img(X)
-    _, labels = cv2.connectedComponents(img)
+    X_processed = tune_img(X, img_filename)
+    _, labels = cv2.connectedComponents(X_processed)
 
     components = get_components(labels)
     return components
-
-
-
 
 def pad(arr, pad_width):
     arr_new = np.hstack([np.zeros([arr.shape[0], pad_width]), arr]) #left
@@ -81,9 +78,9 @@ def get_components(labels, pad_width=3, erosion_percent=0.4):
         components[i]['pic'] = label_eroded.ravel()
     return components
 
-def tune_img(X, dilation_kernel=None, dilation_iterations=3):
+def tune_img(X, img_filename, dilation_kernel=None, dilation_iterations=3):
     # Binary
-    X_gray = cv2.cvtColor(cv2.imread(file_name_X).astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    X_gray = cv2.cvtColor(cv2.imread(img_filename).astype(np.uint8), cv2.COLOR_BGR2GRAY)
 
     # Remove initial noise and smoothen lighting gradient
     X_gray_smooth = cv2.GaussianBlur(X_gray, (11, 11), 0) #

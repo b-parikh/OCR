@@ -17,7 +17,7 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.secret_CNN_output_map = b'_5#y2L"F4Q8z\n\xec]/'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 cors = CORS(app)
@@ -50,8 +50,8 @@ def index():
 @app.route('/api/<filename>/analyze')
 def analyze(filename):
     # process img
-    data = process_img('./static/uploads/' + filename)
-    return predict(data, persistent_sess, x, y, CNN_output_map)
+    components = process_img('./static/uploads/' + filename)
+    return predict(components, persistent_sess, x, y, CNN_output_map)
 
 
 @app.route('/uploads/<filename>')
@@ -79,6 +79,7 @@ if __name__ == '__main__':
 
     # init output map
     CNN_output_map = make_output_map()
+    print(CNN_output_map[37],CNN_output_map[38],CNN_output_map[31],CNN_output_map[65],CNN_output_map[2],CNN_output_map[1],CNN_output_map[26],CNN_output_map[8],CNN_output_map[16],CNN_output_map[75],CNN_output_map[56],CNN_output_map[6])
         
     print('Starting Session, setting the GPU memory usage to %f' % args.gpu_memory)
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_memory)

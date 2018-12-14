@@ -3,73 +3,110 @@ import json
 import numpy as np
 from numpy import array
 
-def process_output(results_classes, label_to_location, CNN_output_map):
-    output_labels = dict(zip(range(1,len(results_classes) + 1), results_classes))
-    lr_order = sorted([lab for lab in label_to_location], key = lambda x: label_to_location[x]['tl'][1])
-    symbol_medians = []
+def process_output(components, CNN_output_map):
+    components, groups = assign_group(components)
+    components = detect_script(components, groups)
+    return construct_latex(components, groups)
     
-    for component in lr_order:
-        component_location = label_to_location[component]
-        symbol_medians.append((component_location['tl'][0] + component_location['br'][0]) // 2) # in order from left to right
-
-    avg_height = np.mean(symbol_medians)
-
-    height_diff = []
-    for symb, med in zip(lr_order, symbol_medians):
-        curr_height_diff = abs(med - avg_height)
-        height_diff.append(curr_height_diff)
-        
-    avg_diff = np.mean(height_diff)
-    std_diff = np.std(height_diff)
-    
-    height_diff_z = list(map((lambda x: (avg_diff - x)/std_diff), height_diff))
-    symbol_to_height_diff = dict(zip(lr_order, height_diff_z))
-
-    groups2 = [[label_to_location[l]['tl'][0], label_to_location[l]['br'][0]] for l in label_to_location]
-    groups = [groups2[0]]
-    for group in groups2[1:]:
-        if group[0] < groups[-1][1]:
-            groups[-1][1] = max(group[1], groups[-1][1])
+def assign_group(components, offset_threshold=3):
+    heights = [[components[i]['tl'][0], components[i]['br'][0]] for i in components]
+    groups = [heights[0]]
+    for height in heights[1:]:
+        if height[0] + offset_threshold < groups[-1][1]:
+            groups[-1][1] = max(height[1], groups[-1][1])
         else:
-            groups.append(group)
+            groups.append(height)
+    for i in components:
+        for group in groups:
+            if group[0] < components[i]['tl'][0] + offset_threshold < group[1]: 
+                components[i]['group'] = group
+    return components, groups
 
-    vsep = [[tuple(group), []] for group in groups]
+def detect_script(components, groups):
+    for g in groups:
+        bottoms = [components[i]['br'][0] for i in sorted(components.keys()) if components[i]['group'] == g]
+        tops = [components[i]['tl'][0] for i in sorted(components.keys()) if components[i]['group'] == g]
+        bottoms_mean = np.mean(bottoms)
+        bottoms_std = np.std(bottoms)
+        tops_mean = np.mean(tops)
+        tops_std = np.std(tops)
+
+        if len(bottoms) == 1: continue
+        for i in components:
+            if components[i]['group'] == g:
+                s = (bottoms_mean - components[i]['br'][0])/bottoms_std - (components[i]['tl'][0] - tops_mean)/tops_std
+
+                if s > 2.5:
+                    components[i]['sup'] = True
+                elif s < -2.5:
+                    components[i]['sub'] = True
+    return components
+
+def construct_latex(components, groups):
+    lr_order = sorted(components.keys(), key=lambda x: components[x]['tl'][1])
+    vsep = {tuple(group):[] for group in groups}
+    MODE_SUP = set()
+    MODE_SUB = set()
+    MODE_SQRT = {}
+
     for l in lr_order:
-        t = label_to_location[l]['tl'][0]
-        b = label_to_location[l]['br'][0]
-        for i, g in enumerate(vsep):
-            if g[0][0] <= t <= b <= g[0][1]:
-                vsep[i][1].append(l)
+        t, left = components[l]['tl']
+        b, right = components[l]['br']
+        for g in vsep:
+            if g[0] <= t <= b <= g[1]:
+
+                if g in MODE_SQRT and left > MODE_SQRT[g]:
+                    vsep[g].append('}')
+                    del MODE_SQRT[g]
+
+                if g in MODE_SUP and not components[l]['sup']:
+                    vsep[g].append('}')
+                    MODE_SUP.remove(g)
+                if g in MODE_SUB and not components[l]['sub']:
+                    vsep[g].append('}')
+                    MODE_SUB.remove(g)
+
+                if g not in MODE_SUP and components[l]['sup']:
+                    vsep[g].append('^{')
+                    MODE_SUP.add(g)
+                if g not in MODE_SUB and components[l]['sub']:
+                    vsep[g].append('_{')
+                    MODE_SUB.add(g)
+
+                vsep[g].append(components[l]['output'] + ' ')
+                if components[l]['output'] == '\\\\sqrt':
+                    MODE_SQRT[g] = right
+                    vsep[g].append('{')
+
                 break
-                
-    
-    chars = ['$']
-    for group, ls in vsep:
-        for l in ls:
-            if symbol_to_height_diff[l] <= -2:
-                chars.append(CNN_output_map[82])
-    #             print(''.join(CNN_output_map[82]), end='')
-            elif symbol_to_height_diff[l] >= 2:
-                chars.append(CNN_output_map[83])
-    #             print(''.join(CNN_output_map[83]), end='')
-            chars.append(CNN_output_map[output_labels[l]])
-    #         print(''.join(CNN_output_map[output_labels[l]]), end = '')
-    
-    chars.append('$')
-    final_latex_string = ''.join(chars)
-    
-    return final_latex_string
 
+    for i in MODE_SQRT:
+        vsep[g].append('}')
+    for g in vsep:
+        vsep[g] = ''.join(vsep[g])
 
-def predict(data, persistent_sess, x, y, CNN_output_map):
-    all_labels = data['labels']
+    # FRACTION PROCESSING (for now just 3 layers)
+    if len(vsep) == 3:
+        first_g, _, last_g = list(sorted([g for g in vsep], key = lambda g: g[0]))
+        final = '\\\\frac{' + vsep[first_g] + '}{' + vsep[last_g] + '}'
+    else:
+        final = list(vsep.values())[0]
+    final = '$' + final + '$'
+    return final
+
+def predict(components, persistent_sess, x, y, CNN_output_map):
     results = []
-    for i in range(len(all_labels)):
-        test = np.asarray(all_labels[i]).astype(np.float32)
+    for i in range(len(components)):
+        test = np.asarray(components[i+1]['pic']).astype(np.float32)
         test = array(test).reshape(1,45,45,1)
         y_out = persistent_sess.run(y, feed_dict={
             x: test
         })
+        components[i+1]['label'] = y_out[0]
+        components[i+1]['output'] = CNN_output_map[y_out[0]]
+
         results += y_out.tolist()
-    expr = process_output(results, data['locations'], CNN_output_map)
+    
+    print(results)
+    expr = process_output(components, CNN_output_map)
     return json.dumps({'results': results, 'expr': expr})
