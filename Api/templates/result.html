@@ -43,10 +43,12 @@
             <img class='main-display' src='{{ url_for("static", filename="uploads/" + filename) }}'>
             <button class='btn btn-secondary' onclick="analyze('{{filename}}')">Analyze</button>
         </div>
-        <div class="output">
+        <div id="output">
             <p id='result'></p>
             <p id='expr'></p>
             <p id='latex'></p>
+            <img id='resultImg' src = ''>
+            <img id='componentImg' src = ''>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
