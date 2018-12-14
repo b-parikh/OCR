@@ -2,3 +2,5 @@ py3Env/
 __pycache__/
 
 *.pyc
+
+.vscode/
