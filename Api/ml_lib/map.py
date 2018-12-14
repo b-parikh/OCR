@@ -1,11 +1,9 @@
-import csv
+import pandas as pd
 
 def make_output_map():
-    reader = csv.DictReader(open('symbolToLatex.csv'))
-    CNN_output_map = {}
+    import pandas as pd
+    df = pd.read_csv('dict.csv', delimiter=',', header=None)
     
-    for row in reader:
-        for i in range(84):
-            CNN_output_map[i] = row[str(i)]
+    key = dict(zip(df.iloc[:, 0], df.iloc[:, 1]))
     
-    return CNN_output_map
+    return key

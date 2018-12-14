@@ -17,7 +17,7 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.secret_CNN_output_map = b'_5#y2L"F4Q8z\n\xec]/'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 cors = CORS(app)
@@ -50,8 +50,8 @@ def index():
 @app.route('/api/<filename>/analyze')
 def analyze(filename):
     # process img
-    data = process_img('./static/uploads/' + filename)
-    return predict(data, persistent_sess, x, y, CNN_output_map)
+    components = process_img('./static/uploads/' + filename)
+    return predict(components, persistent_sess, x, y, CNN_output_map)
 
 
 @app.route('/uploads/<filename>')
@@ -66,7 +66,7 @@ def remove_file(filename):
 if __name__ == '__main__':
     # Let's allow the user to pass the filename as an argument
     parser = argparse.ArgumentParser()
-    parser.add_argument("--frozen_model_filename", default="frozen_graph_v1.pb", type=str, help="Frozen model file to import")
+    parser.add_argument("--frozen_model_filename", default="frozen_graph_v2.pb", type=str, help="Frozen model file to import")
     parser.add_argument("--gpu_memory", default=.2, type=float, help="GPU memory per process")
     args = parser.parse_args()
 
